@@ -242,18 +242,21 @@
     tr.insertCell().textContent = h.day + (h.day === today ? " (today)" : "");
     tr.insertCell().textContent = h.hours;
   }
+  // Google sometimes drops the AM/PM on an opening time ("12:30 to 9 PM"); a bare 12 means noon.
   const toMin = (t) => {
-    const m = t.trim().match(/(\d+)(?::(\d+))?\s*(AM|PM)/i);
+    const m = t.trim().match(/(\d+)(?::(\d+))?\s*(AM|PM)?/i);
     if (!m) return null;
     let hr = +m[1] % 12;
-    if (m[3].toUpperCase() === "PM") hr += 12;
+    if ((m[3] || "").toUpperCase() === "PM" || (!m[3] && +m[1] === 12)) hr += 12;
     return hr * 60 + (+m[2] || 0);
   };
   const row = DATA.hours.find((h) => h.day === today);
   const nowMin = nairobi.getHours() * 60 + nairobi.getMinutes();
   let open = false, label = "Closed today";
   if (row && /to/i.test(row.hours)) {
-    const [a, b] = row.hours.split(/to/i).map(toMin);
+    let [a, b] = row.hours.split(/to/i).map(toMin);
+    // Late-night places close after midnight ("9 AM to 2 AM"): push the closing time into the next day.
+    if (a !== null && b !== null && b <= a) b += 24 * 60;
     open = a !== null && b !== null && nowMin >= a && nowMin < b;
     label = open ? `Open now · until ${row.hours.split(/to/i)[1].trim()}` : `Closed now · today ${row.hours}`;
   }
