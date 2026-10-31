@@ -253,7 +253,10 @@
   const row = DATA.hours.find((h) => h.day === today);
   const nowMin = nairobi.getHours() * 60 + nairobi.getMinutes();
   let open = false, label = "Closed today";
-  if (row && /to/i.test(row.hours)) {
+  if (row && /24 hours/i.test(row.hours)) {
+    open = true;
+    label = "Open now · 24 hours";
+  } else if (row && /to/i.test(row.hours)) {
     let [a, b] = row.hours.split(/to/i).map(toMin);
     // Late-night places close after midnight ("9 AM to 2 AM"): push the closing time into the next day.
     if (a !== null && b !== null && b <= a) b += 24 * 60;
